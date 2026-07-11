@@ -1,4 +1,5 @@
 import axios from "axios";
+import { topUpUserBalance } from "./services/adminService";
 
 export type UserRole = "ADMIN" | "USER";
 
@@ -39,4 +40,10 @@ export const userApi = {
   getAll: () => api.get<User[]>("/users").then((res) => res.data),
   create: (user: { username: string }) =>
     api.post<User>("/users", user).then((res) => res.data),
+  UpUserBalance: (userId: string, amount: number) =>
+    api
+      .post<User>(`/users/${userId}/topup`, { amount })
+      .then((res) => res.data),
+  ban: (userId: string, amount: number) =>
+    api.post<User>(`users/${userId}/ban`, { amount }).then((res) => res.data),
 };
