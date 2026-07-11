@@ -1,59 +1,67 @@
-import { useEffect, useState } from "react";
-import { computerApi, userApi } from "./api";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import UsersList from "./pages/UserList";
+import UserClientPage from "./pages/UserClientPage";
+import Auth from "./components/Auth";
 
-export interface Computer {
-  id: string;
-  name: string;
-  zone: string;
-  status: string;
-  pricePerHour: number;
+function AdminRoute({ children }: { children: JSX.Element }) {
+  const role = localStorage.getItem("cybershell_role");
+  if (role !== "ADMIN") {
+    return <Navigate to="/client" replace />;
+  }
+  return children;
 }
 
-export interface User {
-  id: string;
-  username: string;
-  balance: number;
-  isBanned: boolean;
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const isAuthenticated = localStorage.getItem("cybershell_user");
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
 }
 
 export default function App() {
-  const [computers, setComputers] = useState<Computer[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const handleAuthSuccess = (user: any) => {
+    localStorage.setItem("cybershell_user", user.username);
 
-  useEffect(() => {
-    Promise.all([computerApi.getAll(), userApi.getAll()])
-      .then(([computersData, usersData]) => {
-        setComputers(computersData);
-        setUsers(usersData);
-      })
-      .catch((err) => {
-        console.error("Ошибка загрузки данных системы:", err);
-      });
-  }, []);
+    const isAdmin = ["admin", "operator"].includes(user.username.toLowerCase());
+    localStorage.setItem("cybershell_role", isAdmin ? "ADMIN" : "USER");
+
+    window.location.href = isAdmin ? "/" : "/client";
+  };
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-6 font-sans">
-      <h1 className="text-2xl uppercase tracking-wider text-cyan-400 border-b border-slate-900 pb-4 mb-8">
-        Список всех компьютеров
-      </h1>
-      <ul className="">
-        {computers.map((pc) => (
-          <li className="" key={pc.id || Math.random()}>
-            <b>{pc.name}</b> — Зона: {pc.zone} | Статус: {pc.status} | Цена: $
-            {pc.pricePerHour} /hr
-          </li>
-        ))}
-      </ul>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/auth"
+          element={<Auth onAuthSuccess={handleAuthSuccess} />}
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <Layout />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="users" element={<UsersList />} />
+        </Route>
+        <Route
+          path="/client"
+          element={
+            <ProtectedRoute>
+              <UserClientPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <ul className="">
-        {users.map((user) => (
-          <li className="" key={user.id || Math.random()}>
-                <span>
-                  @{user.username}
-                </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

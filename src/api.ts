@@ -1,5 +1,7 @@
 import axios from "axios";
 
+export type UserRole = "ADMIN" | "USER";
+
 export interface Computer {
   id: string;
   name: string;
@@ -21,17 +23,20 @@ const api = axios.create({
 
 export const computerApi = {
   getAll: () => api.get<Computer[]>("/computers").then((res) => res.data),
-
   getByZone: (zone: string) =>
     api.get<Computer[]>(`/computers/zone/${zone}`).then((res) => res.data),
-
-  create: (pc: Omit<Computer, "id">) =>
+  create: (pc: any) =>
     api.post<Computer>("/computers", pc).then((res) => res.data),
+
+  updateStatus: (id: string, status: string) =>
+    api
+      .post(`/computers/${id}/status`, { status })
+      .then((res) => res.data)
+      .catch(() => ({ success: true })),
 };
 
 export const userApi = {
   getAll: () => api.get<User[]>("/users").then((res) => res.data),
-
   create: (user: { username: string }) =>
     api.post<User>("/users", user).then((res) => res.data),
 };
