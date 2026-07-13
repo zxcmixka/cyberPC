@@ -6,7 +6,7 @@ interface TopUpResponse {
 }
 
 /**
- * 1. Пополнение баланса пользователя
+ * Пополнение баланса пользователя
  * @param serverUrl
  * @param userId
  * @param amount - Сумма пополнения
@@ -39,7 +39,7 @@ export async function topUpUserBalance(
 }
 
 /**
- * 2. Бан пользователя
+ * Бан пользователя
  * @param serverUrl
  * @param userId
  */
